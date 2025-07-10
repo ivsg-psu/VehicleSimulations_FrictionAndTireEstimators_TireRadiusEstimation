@@ -28,15 +28,26 @@ function cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData(vararg
 %      meaning of the data depends on the test cases. The test cases are as
 %      follows:
 %
+%   CASE: xx - ideal cases, no noise
 %      1: [distances thetas] for perfect data, r = 1 meter, angle rotating
 %         from 0 to 2*pi.
 %         Test options: [N] where N is repeats of data as rows (default is
 %         10)
 %
-%      2: [velocities omegas] for perfect data, r = 1 meter, angle rotating
+%      2: [velocities omegas] in units of [meters/sec], [radians/sec]
+%         respectively,for perfect data, r = 1 meter, angle rotating
 %         for 10 samples.
 %         Test options: [N] where N is repeats of data as rows (default is
 %         10)
+%
+%   CASE: 70xx - data collected for HSOV
+%   7001: [distances thetas] in units of [meters], [radians]
+%         respectively, for data collected on HSOV in Reber parking lot.
+%         Radius is approximately 0.09 meters. 3 laps total.
+%
+%   7002: [velocities omegas] in units of [meters/sec], [radians/sec]
+%         respectively, for data collected on HSOV in Reber parking lot.
+%         Radius is approximately 0.09 meters. 3 laps total.
 %
 % DEPENDENCIES:
 %
@@ -127,7 +138,7 @@ end
 
 % Does user specify test_options?
 test_options = [];
-if 1 <= nargin
+if 2 <= nargin
     temp = varargin{2};
     if ~isempty(temp)
         test_options = temp; 
@@ -170,11 +181,13 @@ end
 
 cellArrayOf_sampleData = cell(NtestCases,1);
 dataTypes = zeros(NtestCases,1);
+plotTitles = cell(NtestCases,1);
 for ith_test = 1:length(specific_test_cases)
     thisTestCase = specific_test_cases(ith_test,1);
     switch thisTestCase
         case 1
-            %      1: [distances thetas] for perfect data, r = 1 meter.
+            %      1: [distances thetas] for perfect data, r = 1 meter, angle rotating
+            %         from 0 to 2*pi.
             %         Test options: [N] where N is repeats of data as rows (default is
             %         10)
             if isempty(test_options)
@@ -186,8 +199,10 @@ for ith_test = 1:length(specific_test_cases)
             distances = thetas*1.0;
             cellArrayOf_sampleData{ith_test,1} = [distances thetas]; 
             dataTypes(ith_test,1) = 1;
+            plotTitles{ith_test,1} = sprintf('Perfect position data, N=%.0d samples',Npoints);
         case 2
-            %      2: [velocities omegas] for perfect data, r = 1 meter, angle rotating
+            %      2: [velocities omegas] in units of [meters/sec], [radians/sec]
+            %         respectively,for perfect data, r = 1 meter, angle rotating
             %         for 10 samples.
             %         Test options: [N] where N is repeats of data as rows (default is
             %         10)
@@ -200,6 +215,68 @@ for ith_test = 1:length(specific_test_cases)
             velocities = omegas*1.0;
             cellArrayOf_sampleData{ith_test,1} = [velocities omegas]; 
             dataTypes(ith_test,1) = 2;
+            plotTitles{ith_test,1} = sprintf('Perfect velocity data, N=%.0d samples',Npoints);
+
+        case 7001
+            % CASE: 70xx - data collected for HSOV
+            %      7001: [distances thetas] in [meters, radians] for data
+            %      collected on HSOV in Reber parking lot. Radius is
+            %      approximately 0.09 meters. 3 laps total.
+            load('wheel_radius_HSOV_data_3lapsAtReber.mat', 'all_data_trimmed_to_laps', 'reference_LLA','trimmingBoundaries');
+            Nlaps = length(all_data_trimmed_to_laps);
+            cellArrayOf_distances = cell(Nlaps,1);
+            cellArrayOf_thetas    = cell(Nlaps,1);
+            previousDistance = 0;
+            previousTheta = [0 0 0 0];
+            for ith_lap = 1:Nlaps
+                this_distance = all_data_trimmed_to_laps(ith_lap).gpsStation - all_data_trimmed_to_laps(ith_lap).gpsStation(1) + previousDistance;
+                cellArrayOf_distances{ith_lap,1} = this_distance;
+                previousDistance = this_distance(end,1);
+
+                rawThetas = all_data_trimmed_to_laps(ith_lap).encoderRadsAtGPSTimes;
+                Nraw = length(rawThetas(:,1));
+
+                % Remove initial offsets in the lap, and force the angle to
+                % start at same point of previous lap
+                this_theta = rawThetas + ones(Nraw,1)*(previousTheta - rawThetas(1,:));
+                cellArrayOf_thetas{ith_lap,1} = this_theta;
+                previousTheta = this_theta(end,:);
+
+            end
+            distances_thetas = [cell2mat(cellArrayOf_distances) cell2mat(cellArrayOf_thetas)];
+
+            % Remove repeats
+            distances_thetas_unique = unique(distances_thetas,'rows','stable');
+            cellArrayOf_sampleData{ith_test,1} = distances_thetas_unique;
+            dataTypes(ith_test,1) = 1;
+            Npoints = length(cellArrayOf_sampleData{ith_test,1}(:,1));
+            plotTitles{ith_test,1} = sprintf('HSOV data, Reber 3 laps, N=%.0d',Npoints);
+
+
+        case 7002
+            %   7002: [velocities omegas] in units of [meters/sec], [radians/sec]
+            %         respectively, for data collected on HSOV in Reber parking lot.
+            %         Radius is approximately 0.09 meters. 3 laps total.
+            
+            load('wheel_radius_HSOV_data_3lapsAtReber.mat', 'all_data_trimmed_to_laps', 'reference_LLA','trimmingBoundaries');
+            Nlaps = length(all_data_trimmed_to_laps);
+            cellArrayOf_velocities = cell(Nlaps,1);
+            cellArrayOf_omegas    = cell(Nlaps,1);
+
+            for ith_lap = 1:Nlaps
+                this_velocity = all_data_trimmed_to_laps(ith_lap).GroundVelocity;
+                cellArrayOf_velocities{ith_lap,1} = this_velocity;
+
+                this_omega = all_data_trimmed_to_laps(ith_lap).encoderRadPerSecAtGPSTime;
+                cellArrayOf_omegas{ith_lap,1} = this_omega;
+            end
+            velocities_omegas = [cell2mat(cellArrayOf_velocities) cell2mat(cellArrayOf_omegas)];
+
+            cellArrayOf_sampleData{ith_test,1} = velocities_omegas;
+            dataTypes(ith_test,1) = 2;
+            Npoints = length(cellArrayOf_sampleData{ith_test,1}(:,1));
+            plotTitles{ith_test,1} = sprintf('HSOV data, Reber 3 laps, N=%.0d',Npoints);
+
         otherwise
             error('Unknown test given: %.0d',thisTestCase);
     end % Ends switch
@@ -226,15 +303,19 @@ if flag_do_plots
 
     % Show results
     for ith_test = 1:length(cellArrayOf_sampleData)
+        thisData = cellArrayOf_sampleData{ith_test};
+        caseNumber = specific_test_cases(ith_test);
+        Nencoders  = length(thisData(1,:))-1;
 
         nexttile
 
         hold on;
-        axis equal;
         grid on;
           
-        plot(cellArrayOf_sampleData{ith_test}(:,1),cellArrayOf_sampleData{ith_test}(:,2),'.-','LineWidth',3,'DisplayName',sprintf('Test data %.0d',ith_test));
-        title(sprintf('Test data %.0d',ith_test))
+        for ith_encoder = 1:Nencoders
+            plot(thisData(:,1),thisData(:,ith_encoder+1),'.-','LineWidth',3,'DisplayName',sprintf('Case %.0d, Encoder %.0d',caseNumber,ith_encoder));
+        end
+        title(plotTitles{ith_test});
 
         if 1==dataTypes(ith_test,1)
             ylabel('Thetas [rad]');

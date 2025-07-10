@@ -5,16 +5,18 @@
 %
 % NOTE: to view the output file with formatting, use the "type" command.
 % For example:
-% type('script_test_fcn_Laps_all_stdout.txt')
+% type('script_test_fcn_TireRadiusEstimation_all_stdout.txt')
 
 clearvars; 
 close all; 
 clc;
-all_scripts = dir(cat(2,'.',filesep,'Functions',filesep,'script_test_fcn_Laps_*.m'));
+all_scripts = dir(cat(2,'.',filesep,'Functions',filesep,'script_test_fcn_TireRadiusEstimation_*.m'));
 N_files = length(all_scripts);
+
+testing_indices = (1:N_files)';
 testing_times = nan(N_files,1);
 
-diary 'script_test_fcn_Laps_all_stdout.txt';
+diary 'script_test_fcn_TireRadiusEstimation_all_stdout.txt';
 
 for i_script = 1:N_files
     file_name_extended = all_scripts(i_script).name;
@@ -35,8 +37,7 @@ diary off
 
 close all;
 figure(458908);
-plot(testing_times);
-grid on;
+bar(testing_indices,testing_times)
 xlabel('Script test number');
 ylabel('Elapsed time to test (sec)');
 

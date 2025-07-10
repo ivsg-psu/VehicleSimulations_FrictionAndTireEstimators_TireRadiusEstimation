@@ -1,0 +1,140 @@
+<strong> </strong><strong>Testing script: 1 of 1, script_test_fcn_TireRadiusEstimation_fillSampleData
+
+</strong>Running script_test_fcn_TireRadiusEstimation_fillSampleData
+.Figure: 1XXXXXX: DEMO cases
+.Figure 10001: DEMO case: Basic demo, loading all
+.Figure 7001: FIELD DATA case: HSOV Reber 3 laps
+.Figure: 8XXXXXX: FAST mode cases
+.Figure: 80001: FAST mode, empty fig_num
+
+================================================================================
+<strong>Error occurred in script_test_fcn_TireRadiusEstimation_fillSampleData/BasicExample_NOFIGURE and it did not run to completion.</strong>
+    ---------
+    Error ID:
+    ---------
+    'MATLAB:UndefinedFunction'
+    --------------
+    Error Details:
+    --------------
+    Unrecognized function or variable 'titleString'.
+    
+    Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('script_test_fcn_TireRadiusEstimation_fillSampleData', 'D:\GitHubRepos\IVSG\VehicleSimulations\FrictionAndTireEstimators\TireRadiusEstimation\Functions\script_test_fcn_TireRadiusEstimation_fillSampleData.m', 119)" style="font-weight:bold">script_test_fcn_TireRadiusEstimation_fillSampleData</a> (<a href="matlab: opentoline('D:\GitHubRepos\IVSG\VehicleSimulations\FrictionAndTireEstimators\TireRadiusEstimation\Functions\script_test_fcn_TireRadiusEstimation_fillSampleData.m',119,0)">line 119</a>)
+    sgtitle(titleString, 'Interpreter','none');
+================================================================================
+.Figure: 80002: FAST mode, fig_num=-1
+
+================================================================================
+<strong>Error occurred in script_test_fcn_TireRadiusEstimation_fillSampleData/BasicFastMode_NOFIGURE_FASTMODE and it did not run to completion.</strong>
+    ---------
+    Error ID:
+    ---------
+    'MATLAB:UndefinedFunction'
+    --------------
+    Error Details:
+    --------------
+    Unrecognized function or variable 'titleString'.
+    
+    Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('script_test_fcn_TireRadiusEstimation_fillSampleData', 'D:\GitHubRepos\IVSG\VehicleSimulations\FrictionAndTireEstimators\TireRadiusEstimation\Functions\script_test_fcn_TireRadiusEstimation_fillSampleData.m', 148)" style="font-weight:bold">script_test_fcn_TireRadiusEstimation_fillSampleData</a> (<a href="matlab: opentoline('D:\GitHubRepos\IVSG\VehicleSimulations\FrictionAndTireEstimators\TireRadiusEstimation\Functions\script_test_fcn_TireRadiusEstimation_fillSampleData.m',148,0)">line 148</a>)
+    sgtitle(titleString, 'Interpreter','none');
+================================================================================
+.Figure: 80003: FAST mode comparisons
+... ..
+Done script_test_fcn_TireRadiusEstimation_fillSampleData
+__________
+
+Failure Summary:
+
+     Name                                                                                 Failed  Incomplete  Reason(s)
+    ====================================================================================================================
+     script_test_fcn_TireRadiusEstimation_fillSampleData/BasicExample_NOFIGURE              X         X       Errored.
+    --------------------------------------------------------------------------------------------------------------------
+     script_test_fcn_TireRadiusEstimation_fillSampleData/BasicFastMode_NOFIGURE_FASTMODE    X         X       Errored.
+<strong> </strong><strong>Testing script: 1 of 1, script_test_fcn_TireRadiusEstimation_fillSampleData
+
+</strong>Running script_test_fcn_TireRadiusEstimation_fillSampleData
+.Figure: 1XXXXXX: DEMO cases
+.Figure 10001: DEMO case: Basic demo, loading all
+.Figure 7001: FIELD DATA case: HSOV Reber 3 laps
+.Figure: 8XXXXXX: FAST mode cases
+.Figure: 80001: FAST mode, empty fig_num
+.Figure: 80002: FAST mode, fig_num=-1
+.Figure: 80003: FAST mode comparisons
+... ..
+Done script_test_fcn_TireRadiusEstimation_fillSampleData
+__________
+
+<strong> </strong><strong>Testing script: 1 of 2, script_test_fcn_TireRadiusEstimation_fillSampleData
+
+</strong>Running script_test_fcn_TireRadiusEstimation_fillSampleData
+.Figure: 1XXXXXX: DEMO cases
+.Figure 10001: DEMO case: Basic demo, loading all
+.Figure 7001: FIELD DATA case: HSOV Reber 3 laps position
+.Figure 7002: FIELD DATA case: HSOV Reber 3 laps velocity
+.Figure: 8XXXXXX: FAST mode cases
+.Figure: 80001: FAST mode, empty fig_num
+.Figure: 80002: FAST mode, fig_num=-1
+.Figure: 80003: FAST mode comparisons
+.. ...
+Done script_test_fcn_TireRadiusEstimation_fillSampleData
+__________
+
+<strong> </strong><strong>Testing script: 2 of 2, script_test_fcn_TireRadiusEstimation_rEstVelInstantaneous
+
+</strong>Running script_test_fcn_TireRadiusEstimation_rEstVelInstantaneous
+.Figure: 1XXXXXX: DEMO cases
+.Figure 10001: DEMO case: Basic demo with perfect data
+.Figure 10002: DEMO case: Basic demo using optional inputs, perfect data
+.Figure 7002: FIELD DATA case: HSOV Reber 3 laps
+.Figure: 8XXXXXX: FAST mode cases
+.Figure: 80001: FAST mode, empty fig_num
+.Figure: 80002: FAST mode, fig_num=-1
+.Figure: 80003: FAST mode comparisons
+.. ...
+Done script_test_fcn_TireRadiusEstimation_rEstVelInstantaneous
+__________
+
+<strong> </strong><strong>Testing script: 1 of 3, script_test_fcn_TireRadiusEstimation_fillSampleData
+
+</strong>Running script_test_fcn_TireRadiusEstimation_fillSampleData
+.Figure: 1XXXXXX: DEMO cases
+.Figure 10001: DEMO case: Basic demo, loading all
+.Figure 7001: FIELD DATA case: HSOV Reber 3 laps position
+.Figure 7002: FIELD DATA case: HSOV Reber 3 laps velocity
+.Figure: 8XXXXXX: FAST mode cases
+.Figure: 80001: FAST mode, empty fig_num
+.Figure: 80002: FAST mode, fig_num=-1
+.Figure: 80003: FAST mode comparisons
+.. ...
+Done script_test_fcn_TireRadiusEstimation_fillSampleData
+__________
+
+<strong> </strong><strong>Testing script: 2 of 3, script_test_fcn_TireRadiusEstimation_rEstVelFilteredTime
+
+</strong>Running script_test_fcn_TireRadiusEstimation_rEstVelFilteredTime
+.Figure: 1XXXXXX: DEMO cases
+.Figure 10001: DEMO case: Basic demo with perfect data
+.Figure 10002: DEMO case: Basic demo using optional inputs, perfect data
+.Figure 7002: FIELD DATA case: HSOV Reber 3 laps
+.Figure: 8XXXXXX: FAST mode cases
+.Figure: 80001: FAST mode, empty fig_num
+.Figure: 80002: FAST mode, fig_num=-1
+.Figure: 80003: FAST mode comparisons
+.. ...
+Done script_test_fcn_TireRadiusEstimation_rEstVelFilteredTime
+__________
+
+<strong> </strong><strong>Testing script: 3 of 3, script_test_fcn_TireRadiusEstimation_rEstVelInstantaneous
+
+</strong>Running script_test_fcn_TireRadiusEstimation_rEstVelInstantaneous
+.Figure: 1XXXXXX: DEMO cases
+.Figure 10001: DEMO case: Basic demo with perfect data
+.Figure 10002: DEMO case: Basic demo using optional inputs, perfect data
+.Figure 7002: FIELD DATA case: HSOV Reber 3 laps
+.Figure: 8XXXXXX: FAST mode cases
+.Figure: 80001: FAST mode, empty fig_num
+.Figure: 80002: FAST mode, fig_num=-1
+.Figure: 80003: FAST mode comparisons
+.. ...
+Done script_test_fcn_TireRadiusEstimation_rEstVelInstantaneous
+__________
+

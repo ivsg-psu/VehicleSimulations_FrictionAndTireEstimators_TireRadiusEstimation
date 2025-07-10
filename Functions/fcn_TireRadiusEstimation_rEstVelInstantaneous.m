@@ -1,37 +1,36 @@
-function h_plot = fcn_Laps_plotPointZoneDefinition(zone_definition,varargin)
-% fcn_Laps_plotPointZoneDefinition
-% Plots the point zone definition given by the input variable, zone_definition.
-%
-% Accepts as an optional second input standard plot style specifications,
-% for example 'r-' for a red line.
-%
-% As optional third input, plots this in a user-specified figure. Returns
-% the plot handle as the output.
+function rEff = fcn_TireRadiusEstimation_rEstVelInstantaneous(velocities_omegas, varargin)
+% fcn_TireRadiusEstimation_rEstVelInstantaneous
+% Produces instantaneous estimates of effective wheel radius based on
+% velocity inputs.
 %
 % FORMAT:
 %
-%       h_plot = fcn_Laps_plotPointZoneDefinition(zone_definition, (plot_style), (fig_num))
+%       rEff = fcn_TireRadiusEstimation_rEstVelInstantaneous(velocities_omegas, (plotXvalues), (plotXlabelString), (fig_num))
 %
 % INPUTS:
+%      velocities_omegas: an NxM matrix of [distances thetas] in units of
+%      [meters/sec], [radians/sec], where distances is always a Nx1 and
+%      thetas is Nx(M-1) to allow multiple encoder readings at same time.
 %
-%      zone_definition: the definition of the zone as given in a point zone
-%      style, namely:
-%           [radius num_points X Y],
-%      where X,Y denote the coordinates of the zone center, and radius is
-%      the radius.
+%      (optional inputs)
 %
-%      (OPTIONAL INPUTS)
+%      plotXvalues: an Nx1 array of values associated with each
+%      velocities_omegas row. This is useful to indicate time samples for
+%      each data, or station location for each data. Default, if left
+%      empty, is to show indices, e.g. (1:N)'. Only used for plotting.
 %
-%      plot_style: the standard plot pecification style allowing line and
-%      color, for example 'r-'. Type "help plot" for a listing of options.
+%      plotXlabelString: a string for labeling the x-axis according to the
+%      plotXvalues. This can be, for example, 'Time [sec]' or 'Station
+%      [m]'. The default, if left empty, is 'Indices (unitless)'. Only used
+%      for plotting.
 %
 %      fig_num: a figure number to plot results. If set to -1, skips any
 %      input checking or debugging, no figures will be generated, and sets
-%      up code to maximize speed.
+%      up code to maximize speed. 
 %
 % OUTPUTS:
 %
-%      h: a handle to the resulting figure
+%      rEff: an Nx(M-1) vector of estimated effective wheel radii
 %
 % DEPENDENCIES:
 %
@@ -39,26 +38,19 @@ function h_plot = fcn_Laps_plotPointZoneDefinition(zone_definition,varargin)
 %
 % EXAMPLES:
 %
-%       See the script: script_test_fcn_Laps_plotPointZoneDefinition.m for
-%       a full test suite.
+%      See the script:
+%      script_test_fcn_TireRadiusEstimation_rEstVelInstantaneous for a
+%      full test suite.
 %
-% This function was written on 2022_04_10 by S. Brennan
+% This function was written on 2025_04_16 by G. Gayoso for HSOV library,
+% with modifications for the TireRadiusEstimation library by S. Brennan.
 % Questions or comments? sbrennan@psu.edu
 
-% Revision history:
-% 2022_04_10
-% -- wrote the code
-% 2022_04_12
-% -- fixed minor bug with showing the arrowhead
-% 2022_07_23
-% -- made argument list consistent with segment zone
-% -- allow zone to be 2D or 3D
-% -- fixed minor bug with arrow being different color than line segment
-% 2025_04_25 by Sean Brennan
-% -- added global debugging options
-% 2025_07_03 - S. Brennan
-% -- cleanup of Debugging area codes
-% -- turn on fast mode for Path calls
+% Revision history:    
+% 2025_04_16  - G. Gayoso
+% -- wrote the code originally for HSOV library
+% 2025_07_10  - S. Brennan
+% -- modified the code in prep for export to TireRadiusEstimation library
 
 % TO-DO
 % (none)
@@ -68,7 +60,7 @@ function h_plot = fcn_Laps_plotPointZoneDefinition(zone_definition,varargin)
 % Check if flag_max_speed set. This occurs if the fig_num variable input
 % argument (varargin) is given a number of -1, which is not a valid figure
 % number.
-MAX_NARGIN = 3; % The largest Number of argument inputs to the function
+MAX_NARGIN = 4; % The largest Number of argument inputs to the function
 flag_max_speed = 0; % The default. This runs code with all error checking
 if (nargin==MAX_NARGIN && isequal(varargin{end},-1))
     flag_do_debug = 0; % % % % Flag to plot the results for debugging
@@ -78,11 +70,11 @@ else
     % Check to see if we are externally setting debug mode to be "on"
     flag_do_debug = 0; % % % % Flag to plot the results for debugging
     flag_check_inputs = 1; % Flag to perform input checking
-    MATLABFLAG_LAPS_FLAG_CHECK_INPUTS = getenv("MATLABFLAG_LAPS_FLAG_CHECK_INPUTS");
-    MATLABFLAG_LAPS_FLAG_DO_DEBUG = getenv("MATLABFLAG_LAPS_FLAG_DO_DEBUG");
-    if ~isempty(MATLABFLAG_LAPS_FLAG_CHECK_INPUTS) && ~isempty(MATLABFLAG_LAPS_FLAG_DO_DEBUG)
-        flag_do_debug = str2double(MATLABFLAG_LAPS_FLAG_DO_DEBUG);
-        flag_check_inputs  = str2double(MATLABFLAG_LAPS_FLAG_CHECK_INPUTS);
+    MATLABFLAG_TIRERADIUSESTIMATION_FLAG_CHECK_INPUTS = getenv("MATLABFLAG_TIRERADIUSESTIMATION_FLAG_CHECK_INPUTS");
+    MATLABFLAG_TIRERADIUSESTIMATION_FLAG_DO_DEBUG = getenv("MATLABFLAG_TIRERADIUSESTIMATION_FLAG_DO_DEBUG");
+    if ~isempty(MATLABFLAG_TIRERADIUSESTIMATION_FLAG_CHECK_INPUTS) && ~isempty(MATLABFLAG_TIRERADIUSESTIMATION_FLAG_DO_DEBUG)
+        flag_do_debug = str2double(MATLABFLAG_TIRERADIUSESTIMATION_FLAG_DO_DEBUG);
+        flag_check_inputs  = str2double(MATLABFLAG_TIRERADIUSESTIMATION_FLAG_CHECK_INPUTS);
     end
 end
 
@@ -112,38 +104,49 @@ if 0==flag_max_speed
     if flag_check_inputs
         % Are there the right number of inputs?
         narginchk(1,MAX_NARGIN);
-
-        % Check the zone_definition input, 4 or 5 columns, 1 row
-        fcn_DebugTools_checkInputsToFunctions(zone_definition, '4or5column_of_numbers',[1 1]);
-
+        
+        % Check the velocities_omegas input
+        fcn_DebugTools_checkInputsToFunctions(velocities_omegas, '2orMorecolumn_of_numbers');
     end
 end
 
-% Check for plot style input
-flag_plot_style_is_specified = 0; % Set default flag value
+% Does user specify plotXvalues?
+plotXvalues = []; % Default is to use indices
 if 2 <= nargin
     temp = varargin{1};
     if ~isempty(temp)
-        plot_style = temp;
-        flag_plot_style_is_specified = 1;
+        plotXvalues = temp; 
+
+        if flag_check_inputs
+            Ndata = length(velocities_omegas(:,1));
+            % Check the plotXvalues input
+            fcn_DebugTools_checkInputsToFunctions(plotXvalues, '1column_of_numbers',[Ndata Ndata]);
+        end
+    end
+end
+
+% Does user specify plotXlabelString?
+plotXlabelString = [];
+if 3 <= nargin
+    temp = varargin{2};
+    if ~isempty(temp)
+        plotXlabelString = temp; 
+        if flag_check_inputs
+            % Check the test_options variable
+            assert(isstring(plotXlabelString)||ischar(plotXlabelString));
+        end
     end
 end
 
 % Does user want to show the plots?
-fig_num = [];
-flag_do_plots = 1; % Default is to show plots
-if (0==flag_max_speed) && (MAX_NARGIN == nargin)
+flag_do_plots = 0; % Default is to NOT show plots
+if (0==flag_max_speed) && (MAX_NARGIN == nargin) 
     temp = varargin{end};
     if ~isempty(temp) % Did the user NOT give an empty figure number?
         fig_num = temp;
         figure(fig_num);
         flag_do_plots = 1;
     end
-end
-
-if isempty(fig_num)
-    temp_h = figure;
-    fig_num = temp_h.Number;
 end
 
 %% Main code
@@ -157,14 +160,9 @@ end
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Do the plot
-radius  = zone_definition(1,1);
-Xcenter = zone_definition(1,3);
-Ycenter = zone_definition(1,4);
+rEff = velocities_omegas(:,1)./velocities_omegas(:,2:end);
+rEff(isinf(rEff)) = nan;
 
-angles = (0:0.01:2*pi)';
-x_circle = Xcenter + radius * cos(angles);
-y_circle = Ycenter + radius * sin(angles);
 
 %% Any debugging?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -178,6 +176,15 @@ y_circle = Ycenter + radius * sin(angles);
 %                           |___/
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if flag_do_plots
+    
+    Ndata = length(velocities_omegas(:,1));
+    if isempty(plotXvalues)
+        plotXvalues = (1:Ndata)';
+    end
+    
+    if isempty(plotXlabelString)
+        plotXlabelString = 'Indices (unitless)';
+    end
 
     % Prep the figure for plotting
     temp_h = figure(fig_num);
@@ -190,7 +197,7 @@ if flag_do_plots
     dimension_of_points = 2;
 
     % Find size of plotting domain
-    allPoints = [Xcenter Ycenter; x_circle y_circle];
+    allPoints = [plotXvalues rEff(:,1)];
     max_plotValues = max(allPoints);
     min_plotValues = min(allPoints);
     sizePlot = max(max_plotValues) - min(min_plotValues);
@@ -240,45 +247,39 @@ if flag_do_plots
         hold on
     end
 
-    axis equal
-
-    % Plot the center point
-    if flag_plot_style_is_specified
-        h_plot{1} = plot(Xcenter,Ycenter,plot_style,'Markersize',20);
-        set(h_plot{1},'Marker','+');
-    else
-        h_plot{1} = plot(Xcenter,Ycenter,'+','Markersize',20);
-        main_color = get(h_plot{1},'Color');
+    Nencoders  = length(rEff(1,:));
+    for ith_encoder = 1:Nencoders
+        plot(plotXvalues(:,1),rEff(:,ith_encoder),'.-','LineWidth',3,'DisplayName',sprintf('Encoder %.0d',ith_encoder));
     end
-
-    % Plot circle in green
-    if flag_plot_style_is_specified
-        h_plot{2} = plot(x_circle,y_circle,plot_style,'Linewidth',2,'Markersize',20);
-    else
-        h_plot{2} = plot(x_circle,y_circle,'-','color',main_color,'Linewidth',2);
-    end
-
-    % Plot the radius arrow?
-    if 1==0
-        U = radius*cos(45*pi/180);
-        V = radius*sin(45*pi/180);
-        if flag_plot_style_is_specified
-            h_plot{3} = quiver(Xcenter,Ycenter,U,V,0,plot_style,'Linewidth',2,'Markersize',20,'ShowArrowHead','on','MaxHeadSize',2);
-        else
-            h_plot{3} = quiver(Xcenter,Ycenter,U,V,0,'color',main_color,'Linewidth',2,'ShowArrowHead','on','MaxHeadSize',2);
-        end
-    end
+    
+    ylabel('rEff [m]');
+    xlabel(plotXlabelString);
 
     axis(goodAxis);
+
+    legend('Interpreter','none');
 
     % Shut the hold off?
     if flag_shut_hold_off
         hold off;
     end
-end
+
+end % Ends if statement to check if plotting should happen
 
 if flag_do_debug
     fprintf(1,'ENDING function: %s, in file: %s\n\n',st(1).name,st(1).file);
 end
-end
 
+end % Ends main function
+
+%% Functions follow
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   ______                _   _
+%  |  ____|              | | (_)
+%  | |__ _   _ _ __   ___| |_ _  ___  _ __  ___
+%  |  __| | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+%  | |  | |_| | | | | (__| |_| | (_) | | | \__ \
+%  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+%
+% See: https://patorjk.com/software/taag/#p=display&f=Big&t=Functions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%§

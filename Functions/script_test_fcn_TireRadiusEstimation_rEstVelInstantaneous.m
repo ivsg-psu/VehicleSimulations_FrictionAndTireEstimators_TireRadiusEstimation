@@ -1,8 +1,8 @@
-% script_test_fcn_TireRadiusEstimation_fillSampleData
-% tests fcn_TireRadiusEstimation_fillSampleData.m
+% script_test_fcn_TireRadiusEstimation_rEstVelInstantaneous
+% tests fcn_TireRadiusEstimation_rEstVelInstantaneous.m
 
 % Revision history
-% 2025_07_09 by Sean Brennan
+% 2025_07_10 by Sean Brennan
 % -- first write of the code
 
 %% Set up the workspace
@@ -26,94 +26,106 @@ close all
 close all;
 fprintf(1,'Figure: 1XXXXXX: DEMO cases\n');
 
-%% DEMO case: Basic demo
+%% DEMO case: Basic demo with perfect data
 fig_num = 10001;
-titleString = sprintf('DEMO case: Basic demo, loading all');
+titleString = sprintf('DEMO case: Basic demo with perfect data');
 fprintf(1,'Figure %.0f: %s\n',fig_num, titleString);
 figure(fig_num); clf;
 
-% Set inputs
-specific_test_cases = [];
+% Load test data
+specific_test_cases = 2;
 test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+velocities_omegas = cellArrayOf_sampleData{1};
+
+% Set values
+plotXvalues = [];
+plotXlabelString = [];
 
 % Call the function
-cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(fig_num));
+rEff = fcn_TireRadiusEstimation_rEstVelInstantaneous(velocities_omegas, (plotXvalues), (plotXlabelString), (fig_num));
 
 sgtitle(titleString, 'Interpreter','none');
 
 % Check variable types
-assert(iscell(cellArrayOf_sampleData));
+assert(isnumeric(rEff));
 
 % Check variable sizes
-Ntests = 2;
-assert(isequal(Ntests,length(cellArrayOf_sampleData))); 
+Npoints = length(velocities_omegas(:,1));
+assert(isequal(size(rEff),[Npoints 1])); 
 
 % Check variable values
-% (too many to test)
+assert(max(abs(rEff-1))<0.00001);
 
 % Make sure plot opened up
 assert(isequal(get(gcf,'Number'),fig_num));
 
-%% FIELD DATA case: HSOV Reber 3 laps position
-fig_num = 7001;
-titleString = sprintf('FIELD DATA case: HSOV Reber 3 laps position');
+
+%% DEMO case: Basic demo using optional inputs, perfect data
+fig_num = 10002;
+titleString = sprintf('DEMO case: Basic demo using optional inputs, perfect data');
 fprintf(1,'Figure %.0f: %s\n',fig_num, titleString);
 figure(fig_num); clf;
 
-% Set inputs
-specific_test_cases = 7001;
+% Load test data
+specific_test_cases = 2;
 test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+velocities_omegas = cellArrayOf_sampleData{1};
+
+% Set values
+plotXvalues = (1:length(velocities_omegas(:,1)))'*0.1;
+plotXlabelString = 'Time [sec]';
 
 % Call the function
-cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(fig_num));
+rEff = fcn_TireRadiusEstimation_rEstVelInstantaneous(velocities_omegas, (plotXvalues), (plotXlabelString), (fig_num));
 
-legend('Interpreter','none');
 sgtitle(titleString, 'Interpreter','none');
 
 % Check variable types
-assert(iscell(cellArrayOf_sampleData));
-assert(isnumeric(cellArrayOf_sampleData{1}));
+assert(isnumeric(rEff));
 
 % Check variable sizes
-Ntests = 1;
-Ndata = 8933;
-assert(isequal(Ntests,length(cellArrayOf_sampleData))); 
-assert(isequal(size(cellArrayOf_sampleData{1}),[Ndata 5]));
+Npoints = length(velocities_omegas(:,1));
+assert(isequal(size(rEff),[Npoints 1])); 
 
 % Check variable values
-% (too much data to test)
+assert(max(abs(rEff-1))<0.00001);
 
 % Make sure plot opened up
 assert(isequal(get(gcf,'Number'),fig_num));
 
-%% FIELD DATA case: HSOV Reber 3 laps velocity
+%% FIELD DATA case: HSOV Reber 3 laps
 fig_num = 7002;
-titleString = sprintf('FIELD DATA case: HSOV Reber 3 laps velocity');
+titleString = sprintf('FIELD DATA case: HSOV Reber 3 laps');
 fprintf(1,'Figure %.0f: %s\n',fig_num, titleString);
 figure(fig_num); clf;
 
-% Set inputs
+% Load test data
 specific_test_cases = 7002;
 test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+velocities_omegas = cellArrayOf_sampleData{1};
+
+% Set values
+plotXvalues = (1:length(velocities_omegas(:,1)))'*0.05;
+plotXlabelString = 'Time [sec]';
 
 % Call the function
-cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(fig_num));
+rEff = fcn_TireRadiusEstimation_rEstVelInstantaneous(velocities_omegas, (plotXvalues), (plotXlabelString), (fig_num));
 
-legend('Interpreter','none');
 sgtitle(titleString, 'Interpreter','none');
 
 % Check variable types
-assert(iscell(cellArrayOf_sampleData));
-assert(isnumeric(cellArrayOf_sampleData{1}));
+assert(isnumeric(rEff));
 
 % Check variable sizes
-Ntests = 1;
-Ndata = 8935;
-assert(isequal(Ntests,length(cellArrayOf_sampleData))); 
-assert(isequal(size(cellArrayOf_sampleData{1}),[Ndata 5]));
+Npoints = length(velocities_omegas(:,1));
+Nencoders = length(velocities_omegas(1,:))-1;
+assert(isequal(size(rEff),[Npoints Nencoders])); 
 
 % Check variable values
-% (too much data to test)
+assert(max(abs(rEff-0.09),[],'all')<0.1);
 
 % Make sure plot opened up
 assert(isequal(get(gcf,'Number'),fig_num));
@@ -141,22 +153,28 @@ fig_num = 80001;
 fprintf(1,'Figure: %.0f: FAST mode, empty fig_num\n',fig_num);
 figure(fig_num); close(fig_num);
 
-% Set inputs
-specific_test_cases = [];
+% Load test data
+specific_test_cases = 2;
 test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+velocities_omegas = cellArrayOf_sampleData{1};
+
+% Set values
+plotXvalues = [];
+plotXlabelString = [];
 
 % Call the function
-cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),([]));
+rEff = fcn_TireRadiusEstimation_rEstVelInstantaneous(velocities_omegas, (plotXvalues), (plotXlabelString), ([]));
 
 % Check variable types
-assert(iscell(cellArrayOf_sampleData));
+assert(isnumeric(rEff));
 
 % Check variable sizes
-Ntests = 2;
-assert(isequal(Ntests,length(cellArrayOf_sampleData))); 
+Npoints = length(velocities_omegas(:,1));
+assert(isequal(size(rEff),[Npoints 1])); 
 
 % Check variable values
-% (too many to test)
+assert(max(abs(rEff-1))<0.00001);
 
 % Make sure plot did NOT open up
 figHandles = get(groot, 'Children');
@@ -168,22 +186,28 @@ fig_num = 80002;
 fprintf(1,'Figure: %.0f: FAST mode, fig_num=-1\n',fig_num);
 figure(fig_num); close(fig_num);
 
-% Set inputs
-specific_test_cases = [];
+% Load test data
+specific_test_cases = 2;
 test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+velocities_omegas = cellArrayOf_sampleData{1};
+
+% Set values
+plotXvalues = [];
+plotXlabelString = [];
 
 % Call the function
-cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+rEff = fcn_TireRadiusEstimation_rEstVelInstantaneous(velocities_omegas, (plotXvalues), (plotXlabelString), (-1));
 
 % Check variable types
-assert(iscell(cellArrayOf_sampleData));
+assert(isnumeric(rEff));
 
 % Check variable sizes
-Ntests = 2;
-assert(isequal(Ntests,length(cellArrayOf_sampleData))); 
+Npoints = length(velocities_omegas(:,1));
+assert(isequal(size(rEff),[Npoints 1])); 
 
 % Check variable values
-% (too many to test)
+assert(max(abs(rEff-1))<0.00001);
 
 % Make sure plot did NOT open up
 figHandles = get(groot, 'Children');
@@ -196,9 +220,15 @@ fprintf(1,'Figure: %.0f: FAST mode comparisons\n',fig_num);
 figure(fig_num);
 close(fig_num);
 
-% Set inputs
-specific_test_cases = [];
+% Load test data
+specific_test_cases = 2;
 test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+velocities_omegas = cellArrayOf_sampleData{1};
+
+% Set values
+plotXvalues = [];
+plotXlabelString = [];
 
 Niterations = 20;
 
@@ -206,7 +236,8 @@ Niterations = 20;
 tic;
 for ith_test = 1:Niterations
     % Call the function
-    cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),([]));
+    rEff = fcn_TireRadiusEstimation_rEstVelInstantaneous(velocities_omegas, (plotXvalues), (plotXlabelString), ([]));
+
 end
 slow_method = toc;
 
@@ -214,7 +245,8 @@ slow_method = toc;
 tic;
 for ith_test = 1:Niterations
     % Call the function
-    cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+    rEff = fcn_TireRadiusEstimation_rEstVelInstantaneous(velocities_omegas, (plotXvalues), (plotXlabelString), (-1));
+
 end
 fast_method = toc;
 

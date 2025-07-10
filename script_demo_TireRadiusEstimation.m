@@ -38,8 +38,13 @@
 %  FilteredTime - uses time filtering
 %  FilteredSpatially - uses spatial filtering
 %
-%  For example: rEstPosInstantaneous is the function doing the
-%  instantaneous, position-based estimation of wheel radius
+%  This produces the following variants:
+%
+%  rEstVelInstantaneous: velocity-based estimation of wheel radius at every
+%  instantaneous sample
+%
+%  rEstVelFilteredTime: velocity-based estimation of wheel radius by
+%  filtering results obtained at every instantaneous sample
 %
 %  There are at least 10 combinations, with pros and cons to each of these
 %  choices, and thus there's no "best" algorithm. However, certain methods
@@ -56,9 +61,9 @@
 clear library_name library_folders library_url
 
 ith_library = 1;
-library_name{ith_library}    = 'DebugTools_v2024_12_18';
+library_name{ith_library}    = 'DebugTools_v2025_07_10';
 library_folders{ith_library} = {'Functions','Data'};
-library_url{ith_library}     = 'https://github.com/ivsg-psu/Errata_Tutorials_DebugTools/archive/refs/tags/DebugTools_v2024_12_18.zip';
+library_url{ith_library}     = 'https://github.com/ivsg-psu/Errata_Tutorials_DebugTools/archive/refs/tags/DebugTools_v2025_07_10.zip';
 
 ith_library = ith_library+1;
 library_name{ith_library}    = 'PathClass_v2025_07_02';
@@ -151,8 +156,6 @@ disp('Welcome to the demo code for the TireRadiusEstimation library!')
 %                                  |___/
 % http://patorjk.com/software/taag/#p=display&f=Big&t=Loading%20Test%20Data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-load('wheel_radius_HSOV_data_3lapsAtReber.mat', 'all_data_trimmed_to_laps', 'reference_LLA','trimmingBoundaries');
-URHERE
 
 % Set inputs
 specific_test_cases = [];
