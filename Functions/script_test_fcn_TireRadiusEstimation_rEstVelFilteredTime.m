@@ -96,8 +96,8 @@ assert(max(abs(rEff-1))<0.00001);
 assert(isequal(get(gcf,'Number'),fig_num));
 
 %% FIELD DATA case: HSOV Reber 3 laps
-fig_num = 7002;
-titleString = sprintf('FIELD DATA case: HSOV Reber 3 laps');
+fig_num = 10003;
+titleString = sprintf('FIELD DATA case: radius estimation using velocity that is time filtered, HSOV Reber 3 laps');
 fprintf(1,'Figure %.0f: %s\n',fig_num, titleString);
 figure(fig_num); clf;
 

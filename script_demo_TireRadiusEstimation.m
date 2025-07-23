@@ -54,6 +54,11 @@
 % Revision history:
 % 2025_07_09 - Sean Brennan
 % -- started this library by extracting from HSOV work by Gabe
+% 2025_07_23 - Sean Brennan
+% -- upgraded DebugTools_v2025_07_15
+% -- upgraded PathClass_v2025_07_06
+% -- upgraded PlotRoad_v2025_07_16
+% -- added example for fcn_TireRadiusEstimation_rEstVelFilteredTime
 
 % TO-DO:
 % -- add items here
@@ -61,14 +66,14 @@
 clear library_name library_folders library_url
 
 ith_library = 1;
-library_name{ith_library}    = 'DebugTools_v2025_07_10';
+library_name{ith_library}    = 'DebugTools_v2025_07_15';
 library_folders{ith_library} = {'Functions','Data'};
-library_url{ith_library}     = 'https://github.com/ivsg-psu/Errata_Tutorials_DebugTools/archive/refs/tags/DebugTools_v2025_07_10.zip';
+library_url{ith_library}     = 'https://github.com/ivsg-psu/Errata_Tutorials_DebugTools/archive/refs/tags/DebugTools_v2025_07_15.zip';
 
 ith_library = ith_library+1;
-library_name{ith_library}    = 'PathClass_v2025_07_02';
+library_name{ith_library}    = 'PathClass_v2025_07_06';
 library_folders{ith_library} = {'Functions'};
-library_url{ith_library}     = 'https://github.com/ivsg-psu/PathPlanning_PathTools_PathClassLibrary/archive/refs/tags/PathClass_v2025_07_02.zip';
+library_url{ith_library}     = 'https://github.com/ivsg-psu/PathPlanning_PathTools_PathClassLibrary/archive/refs/tags/PathClass_v2025_07_06.zip';
 
 ith_library = ith_library+1;
 library_name{ith_library}    = 'GetUserInputPath_v2025_04_27';
@@ -76,9 +81,9 @@ library_folders{ith_library} = {''};
 library_url{ith_library}     = 'https://github.com/ivsg-psu/PathPlanning_PathTools_GetUserInputPath/archive/refs/tags/GetUserInputPath_v2025_04_27.zip';
 
 ith_library = ith_library+1;
-library_name{ith_library}    = 'PlotRoad_v2025_04_12';
+library_name{ith_library}    = 'PlotRoad_v2025_07_16';
 library_folders{ith_library} = {'Functions','Data'};
-library_url{ith_library}     = 'https://github.com/ivsg-psu/FieldDataCollection_VisualizingFieldData_PlotRoad/archive/refs/tags/PlotRoad_v2025_04_12.zip';
+library_url{ith_library}     = 'https://github.com/ivsg-psu/FieldDataCollection_VisualizingFieldData_PlotRoad/archive/refs/tags/PlotRoad_v2025_07_16.zip';
 
 % ith_library = ith_library+1;
 % library_name{ith_library}    = 'GPSClass_v2023_04_21';
@@ -157,12 +162,13 @@ disp('Welcome to the demo code for the TireRadiusEstimation library!')
 % http://patorjk.com/software/taag/#p=display&f=Big&t=Loading%20Test%20Data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+fig_num = 1;
 % Set inputs
 specific_test_cases = [];
 test_options = [];
 
 % Call the function
-cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(fig_num));
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(fig_num)); %#ok<NASGU>
 
 
 
@@ -193,7 +199,40 @@ cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_
 % http://patorjk.com/software/taag/#p=display&f=Big&t=Radius%20Estimators
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% FIELD DATA case: radius estimation using velocity that is time filtered, HSOV Reber 3 laps
+fig_num = 10003;
+titleString = sprintf('FIELD DATA case: radius estimation using velocity that is time filtered, HSOV Reber 3 laps');
+fprintf(1,'Figure %.0f: %s\n',fig_num, titleString);
+figure(fig_num); clf;
 
+% Load test data
+specific_test_cases = 7002;
+test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+velocities_omegas = cellArrayOf_sampleData{1};
+
+% Set values
+plotXvalues = (1:length(velocities_omegas(:,1)))'*0.05;
+plotXlabelString = 'Time [sec]';
+
+% Call the function
+rEff = fcn_TireRadiusEstimation_rEstVelFilteredTime(velocities_omegas, (plotXvalues), (plotXlabelString), (fig_num));
+
+sgtitle(titleString, 'Interpreter','none');
+
+% Check variable types
+assert(isnumeric(rEff));
+
+% Check variable sizes
+Npoints = length(velocities_omegas(:,1));
+Nencoders = length(velocities_omegas(1,:))-1;
+assert(isequal(size(rEff),[Npoints Nencoders])); 
+
+% Check variable values
+assert(max(abs(rEff-0.09),[],'all')<0.1);
+
+% Make sure plot opened up
+assert(isequal(get(gcf,'Number'),fig_num));
 
 
 
