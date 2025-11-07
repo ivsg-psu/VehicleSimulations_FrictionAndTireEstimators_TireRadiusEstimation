@@ -1,4 +1,3 @@
-
 %% Introduction to and Purpose of the Code
 % This is the explanation of the code that can be found by running
 %       script_demo_TireRadiusEstimation.m.m
@@ -59,6 +58,10 @@
 % -- upgraded PathClass_v2025_07_06
 % -- upgraded PlotRoad_v2025_07_16
 % -- added example for fcn_TireRadiusEstimation_rEstVelFilteredTime
+% 2025_11_07 - Sean Brennan
+% -- upgraded DebugTools_v2025_11_06
+% -- upgraded PathClass_v2025_08_03
+% -- upgraded PlotRoad_v2025_11_06
 
 % TO-DO:
 % -- add items here
@@ -66,14 +69,14 @@
 clear library_name library_folders library_url
 
 ith_library = 1;
-library_name{ith_library}    = 'DebugTools_v2025_07_15';
+library_name{ith_library}    = 'DebugTools_v2025_11_06';
 library_folders{ith_library} = {'Functions','Data'};
-library_url{ith_library}     = 'https://github.com/ivsg-psu/Errata_Tutorials_DebugTools/archive/refs/tags/DebugTools_v2025_07_15.zip';
+library_url{ith_library}     = 'https://github.com/ivsg-psu/Errata_Tutorials_DebugTools/archive/refs/tags/DebugTools_v2025_11_06.zip';
 
 ith_library = ith_library+1;
-library_name{ith_library}    = 'PathClass_v2025_07_06';
+library_name{ith_library}    = 'PathClass_v2025_08_03';
 library_folders{ith_library} = {'Functions'};
-library_url{ith_library}     = 'https://github.com/ivsg-psu/PathPlanning_PathTools_PathClassLibrary/archive/refs/tags/PathClass_v2025_07_06.zip';
+library_url{ith_library}     = 'https://github.com/ivsg-psu/PathPlanning_PathTools_PathClassLibrary/archive/refs/tags/PathClass_v2025_08_03.zip';
 
 ith_library = ith_library+1;
 library_name{ith_library}    = 'GetUserInputPath_v2025_04_27';
@@ -81,9 +84,9 @@ library_folders{ith_library} = {''};
 library_url{ith_library}     = 'https://github.com/ivsg-psu/PathPlanning_PathTools_GetUserInputPath/archive/refs/tags/GetUserInputPath_v2025_04_27.zip';
 
 ith_library = ith_library+1;
-library_name{ith_library}    = 'PlotRoad_v2025_07_16';
+library_name{ith_library}    = 'PlotRoad_v2025_11_06';
 library_folders{ith_library} = {'Functions','Data'};
-library_url{ith_library}     = 'https://github.com/ivsg-psu/FieldDataCollection_VisualizingFieldData_PlotRoad/archive/refs/tags/PlotRoad_v2025_07_16.zip';
+library_url{ith_library}     = 'https://github.com/ivsg-psu/FieldDataCollection_VisualizingFieldData_PlotRoad/archive/refs/tags/PlotRoad_v2025_11_06.zip';
 
 % ith_library = ith_library+1;
 % library_name{ith_library}    = 'GPSClass_v2023_04_21';
@@ -234,7 +237,121 @@ assert(max(abs(rEff-0.09),[],'all')<0.1);
 % Make sure plot opened up
 assert(isequal(get(gcf,'Number'),fig_num));
 
+%% Yaw Angle Estimators
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% __     __                                   _
+% \ \   / /                 /\               | |
+%  \ \_/ /_ ___      __    /  \   _ __   __ _| | ___
+%   \   / _` \ \ /\ / /   / /\ \ | '_ \ / _` | |/ _ \
+%    | | (_| |\ V  V /   / ____ \| | | | (_| | |  __/
+%    |_|\__,_| \_/\_/   /_/    \_\_| |_|\__, |_|\___|
+%                                        __/ |
+%                                       |___/
+%  ______     _   _                 _
+% |  ____|   | | (_)               | |
+% | |__   ___| |_ _ _ __ ___   __ _| |_ ___  _ __ ___
+% |  __| / __| __| | '_ ` _ \ / _` | __/ _ \| '__/ __|
+% | |____\__ \ |_| | | | | | | (_| | || (_) | |  \__ \
+% |______|___/\__|_|_| |_| |_|\__,_|\__\___/|_|  |___/
+%
+%
+% http://patorjk.com/software/taag/#p=display&f=Big&t=Yaw+Angle+%0AEstimators&x=none&v=0&h=4&w=80&we=false
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Yaw angle estimation cases start with 2XXXXXX
+
+%% FIELD DATA case: Estimation of yaw angles via position changes, HSOV Reber 3 laps
+fig_num = 20001;
+titleString = sprintf('FIELD DATA case: Estimation of yaw angles via position changes, HSOV Reber 3 laps');
+fprintf(1,'Figure %.0f: %s\n',fig_num, titleString);
+figure(fig_num); clf;
+
+% Load test data
+specific_test_cases = 7010;
+test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+
+allData = cellArrayOf_sampleData{1};
+
+% Plot the XY data (check it)
+figure(fig_num);
+
+
+for ith_lap = 1:length(allData)
+    xData = allData(ith_lap).East;
+    yData = allData(ith_lap).North;
+    
+    % Plot X versus Y
+    subplot(1,2,1);
+    hold on;
+    axis equal;
+    h_position = plot(xData, yData,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('XY, lap: %.0f',ith_lap));
+    thisLapColor = get(h_position,'Color');    
+
+    % Calculate position-based yaw angles
+    deltaX = diff(xData);
+    deltaY = diff(yData);
+    deltaDistance = sum((deltaX.^2 + deltaY.^2),2).^2;
+    distanceTraveled = cumsum(deltaDistance);
+    yawAngleDegrees = atan2(deltaY,deltaX)*180/pi;
+    subplot(1,2,2);
+    hold on;
+    plot(distanceTraveled, yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
+    
+end
+subplot(1,2,1);
+legend('Interpreter','none','Location','best');
+xlabel('X [m]');
+ylabel('Y [m]');
+
+subplot(1,2,2);
+legend('Interpreter','none','Location','best');
+xlabel('Distance Traveled [m]');
+ylabel('Yaw [deg]');
+
+Error('Stop here - this is where we stopped');
+
+Next steps:
+- Find the code that calculates the average traversal (path). This is the "reference" that will be used to measure station and transverse. This is prbably already done (Gabe). If not, do not reinvent that wheel.
+- Convert paths to ST coordinates for each lap
+- Plot yaw results of each lap with Station as the x-axis
+- Might plot transverse error, just to show how each lap deviated from average
+- Low-pass filter the yaw angles, plot again versus station to see how well they align with each other. See lines 184 to 201 in fcn_TireRadiusEstimation_rEstVelFilteredTime
+- Repeat yaw angle calculations using velocities_east and _north (basically same calculation, except using velocity vectors rather than delta_X and delta_Y vectors)
+- Repeat plotting
+- Compare velocity-based and position-based yaw measurement. Suspect that velocity-based will be MUCH better.
+- Look at Steve Maransky's thesis on details of how to include yaw angle in calculating distance / velocity effects, with track, to calculate wheel radius.
+(NOTE: this is VERY easy to derive - worth trying yourself)
+- Take best yaw angle measurement above and modify tire radius estimation to include yaw
+- Take photos of tires with metric ruler side-by-side to confirm the 9.X cm estimates
+- After including yaw, check if tire radius estimates converge toward the 1 percent goal of variation - probably will not, but should be MUCH better
+
+
+
+velocities_omegas = cellArrayOf_sampleData{1};
+
+% Set values
+plotXvalues = (1:length(velocities_omegas(:,1)))'*0.05;
+plotXlabelString = 'Time [sec]';
+
+% Call the function
+rEff = fcn_TireRadiusEstimation_rEstVelFilteredTime(velocities_omegas, (plotXvalues), (plotXlabelString), (fig_num));
+
+sgtitle(titleString, 'Interpreter','none');
+
+% Check variable types
+assert(isnumeric(rEff));
+
+% Check variable sizes
+Npoints = length(velocities_omegas(:,1));
+Nencoders = length(velocities_omegas(1,:))-1;
+assert(isequal(size(rEff),[Npoints Nencoders])); 
+
+% Check variable values
+assert(max(abs(rEff-0.09),[],'all')<0.1);
+
+% Make sure plot opened up
+assert(isequal(get(gcf,'Number'),fig_num));
 
 %% Functions follow
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

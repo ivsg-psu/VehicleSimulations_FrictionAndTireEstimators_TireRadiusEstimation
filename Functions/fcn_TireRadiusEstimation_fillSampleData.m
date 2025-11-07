@@ -49,6 +49,9 @@ function cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData(vararg
 %         respectively, for data collected on HSOV in Reber parking lot.
 %         Radius is approximately 0.09 meters. 3 laps total.
 %
+%   7010: ALL the data (structure) collected on HSOV in Reber parking lot,
+%         3 laps.
+%
 % DEPENDENCIES:
 %
 %      fcn_DebugTools_checkInputsToFunctions
@@ -277,6 +280,13 @@ for ith_test = 1:length(specific_test_cases)
             Npoints = length(cellArrayOf_sampleData{ith_test,1}(:,1));
             plotTitles{ith_test,1} = sprintf('HSOV data, Reber 3 laps, N=%.0d',Npoints);
 
+        case 7010            
+            % CASE: 70xx - data collected for HSOV
+            %      7010: ALL data collected on HSOV in Reber parking lot.
+            load('wheel_radius_HSOV_data_3lapsAtReber.mat', 'all_data_trimmed_to_laps', 'reference_LLA','trimmingBoundaries');
+            cellArrayOf_sampleData{ith_test,1} = all_data_trimmed_to_laps;
+            plotTitles{ith_test,1} = sprintf('HSOV data, Reber 3 laps, all data');
+            
         otherwise
             error('Unknown test given: %.0d',thisTestCase);
     end % Ends switch
