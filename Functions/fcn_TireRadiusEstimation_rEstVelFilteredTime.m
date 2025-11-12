@@ -1,4 +1,4 @@
-function rEff = fcn_TireRadiusEstimation_rEstVelFilteredTime(velocities_omegas, varargin)
+function rEff = fcn_TireRadiusEstimation_rEstVelFilteredTime(velocities_omegas, phi, varargin)
 % fcn_TireRadiusEstimation_rEstVelFilteredTime
 % Produces filtered estimates of effective wheel radius based on
 % velocity inputs.
@@ -65,7 +65,7 @@ function rEff = fcn_TireRadiusEstimation_rEstVelFilteredTime(velocities_omegas, 
 % Check if flag_max_speed set. This occurs if the fig_num variable input
 % argument (varargin) is given a number of -1, which is not a valid figure
 % number.
-MAX_NARGIN = 4; % The largest Number of argument inputs to the function
+MAX_NARGIN = 5; % The largest Number of argument inputs to the function
 flag_max_speed = 0; % The default. This runs code with all error checking
 if (nargin==MAX_NARGIN && isequal(varargin{end},-1))
     flag_do_debug = 0; % % % % Flag to plot the results for debugging
@@ -109,7 +109,7 @@ if 0==flag_max_speed
     if flag_check_inputs
         % Are there the right number of inputs?
         narginchk(1,MAX_NARGIN);
-        
+
         % Check the velocities_omegas input
         fcn_DebugTools_checkInputsToFunctions(velocities_omegas, '2orMorecolumn_of_numbers');
     end
@@ -165,7 +165,19 @@ end
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-rEff_raw = velocities_omegas(:,1)./velocities_omegas(:,2:end);
+% 0.4 e1 top e4 bot
+T = 0.495; % Track Width [m] 
+
+v  = velocities_omegas(1:end-1,1);
+wL = v + (T/2)*phi;   
+wR = v - (T/2)*phi;   
+
+rEff_raw_FL = wL ./ velocities_omegas(1:end-1,3);  
+rEff_raw_BL = wL ./ velocities_omegas(1:end-1,4);  
+rEff_raw_FR = wR ./ velocities_omegas(1:end-1,2);
+rEff_raw_BR = wR ./ velocities_omegas(1:end-1,5);
+
+rEff_raw = [rEff_raw_FL,rEff_raw_BL,rEff_raw_FR,rEff_raw_BR];
 
 % Take  the mean along rows
 mean_rEff = mean(rEff_raw,1,'omitmissing');
@@ -182,7 +194,7 @@ for ith_encoder = 1:Nencoders
 end
 
 % Find Wn
-fc = 0.1; % Cutoff frequency (in Hz)
+fc = 2; % Cutoff frequency (in Hz)
 fs = 20; % Sampling frequency (in Hz) -- encoders sample every 10 ms
 
 % Normalize the cutoff frequency (cutoff frequency divided by Nyquist frequency)
@@ -243,7 +255,7 @@ if flag_do_plots
     dimension_of_points = 2;
 
     % Find size of plotting domain
-    allPoints = [plotXvalues rEff(:,1)];
+    allPoints = [plotXvalues(1:end-1,:) rEff(:,1)];
     max_plotValues = max(allPoints);
     min_plotValues = min(allPoints);
     sizePlot = max(max_plotValues) - min(min_plotValues);
@@ -294,7 +306,7 @@ if flag_do_plots
     end
 
     for ith_encoder = 1:Nencoders
-        plot(plotXvalues(:,1),rEff(:,ith_encoder),'.-','LineWidth',1,'DisplayName',sprintf('Encoder %.0d',ith_encoder));
+        plot(plotXvalues(1:end-1,1),rEff(:,ith_encoder),'.-','LineWidth',1,'DisplayName',sprintf('Encoder %.0d',ith_encoder));
     end
     
     ylabel('rEff [m]');
@@ -368,6 +380,7 @@ for ith_input = 1:Ninputs
     else
         ith_string = sprintf('');
     end
+
     plot(samples,filtered_outputs(:,ith_input),'-','Color',colors(ith_input,:)*0.8, 'DisplayName',sprintf('%s %s filtered',names, ith_string));
 end
 

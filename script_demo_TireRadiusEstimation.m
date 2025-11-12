@@ -273,16 +273,44 @@ cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_
 
 allData = cellArrayOf_sampleData{1};
 
+n = min(3, numel(allData));         
+laps = cell(1, n);
+
+for i = 1:n
+    x = allData(i).East;         
+    y = allData(i).North;
+    laps{i} = [x, y];
+end
+
+%average_path = fcn_Path_findAveragePath(laps,0.1);
+
+nLaps = numel(allData);
+lengths = arrayfun(@(d) numel(d.East), allData);
+N = min(lengths);
+
+  stack = nan(N, 2, nLaps);  % [N x 2 x L]
+  for i = 1:nLaps
+    xData = allData(i).East(:);
+    yData = allData(i).North(:);
+    stack(:,:,i) = [xData(1:N), yData(1:N)];
+  end
+
+average_path = mean(stack, 3);
+
 % Plot the XY data (check it)
 figure(fig_num);
 
-
 for ith_lap = 1:length(allData)
-    xData = allData(ith_lap).East;
-    yData = allData(ith_lap).North;
+
+    lap = laps{ith_lap};
+    lap_St = fcn_Path_convertXY2St(average_path,lap);
+    lap_S = lap_St(:,1);
+
+    xData = laps{ith_lap}(:,1);
+    yData = laps{ith_lap}(:,2);
     
     % Plot X versus Y
-    subplot(1,2,1);
+    subplot(1,3,1);
     hold on;
     axis equal;
     h_position = plot(xData, yData,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('XY, lap: %.0f',ith_lap));
@@ -291,51 +319,231 @@ for ith_lap = 1:length(allData)
     % Calculate position-based yaw angles
     deltaX = diff(xData);
     deltaY = diff(yData);
-    deltaDistance = sum((deltaX.^2 + deltaY.^2),2).^2;
-    distanceTraveled = cumsum(deltaDistance);
     yawAngleDegrees = atan2(deltaY,deltaX)*180/pi;
-    subplot(1,2,2);
+
+    subplot(1,3,2);
     hold on;
-    plot(distanceTraveled, yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
+    plot(lap_S(1:end-1), yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
     
+    % Find Wn
+    fc = 0.1; % Cutoff frequency (in Hz)
+    fs = 2/(mean(diff(allData(ith_lap).Time_ms))/1000); % GPS Sampling frequency (in Hz)
+    
+    % Normalize the cutoff frequency (cutoff frequency divided by Nyquist frequency)
+    Wn = fc / (fs / 2);
+    
+    % Design the 2nd -order Butterworth filter
+    [b, a] = butter(2, Wn, 'low');
+    
+    b_normalized = b/sum(b);
+    a_normalized = a/sum(b);
+    
+    filtered_yawAngleDegrees = filtfilt(b_normalized, a_normalized, yawAngleDegrees); % filter along row dimension
+
+    subplot(1,3,3);
+    hold on;
+    plot(lap_S(1:end-1), filtered_yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Filtered Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
+
 end
-subplot(1,2,1);
+
+subplot(1,3,1);
+plot(average_path(:,1),average_path(:,2),'.-','MarkerSize',10,'LineWidth',2,'DisplayName','Lap Average','Color','k')
 legend('Interpreter','none','Location','best');
 xlabel('X [m]');
 ylabel('Y [m]');
 
-subplot(1,2,2);
+subplot(1,3,2);
 legend('Interpreter','none','Location','best');
-xlabel('Distance Traveled [m]');
+xlabel('Station');
 ylabel('Yaw [deg]');
 
+subplot(1,3,3);
+legend('Interpreter','none','Location','best');
+xlabel('Station');
+ylabel('Yaw [deg]');
+
+%% FIELD DATA case: Estimation of yaw angles via velocity changes, HSOV Reber 3 laps
+
+fig_num = 20002;
+    titleString = sprintf('FIELD DATA case: Estimation of yaw angles via velocity changes, HSOV Reber 3 laps');
+    fprintf(1,'Figure %.0f: %s\n',fig_num, titleString);
+    figure(fig_num); clf;
+
+% Load test data
+specific_test_cases = 7010;
+test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+
+allData = cellArrayOf_sampleData{1};
+
+n = min(3, numel(allData));         
+laps = cell(1, n);
+
+for i = 1:n
+    x = allData(i).East;         
+    y = allData(i).North;
+    laps{i} = [x, y];
+end
+
+%average_path = fcn_Path_findAveragePath(laps,0.1);
+
+nLaps = numel(allData);
+lengths = arrayfun(@(d) numel(d.East), allData);
+N = min(lengths);
+
+  stack = nan(N, 2, nLaps);  % [N x 2 x L]
+  for i = 1:nLaps
+    xData = allData(i).East(:);
+    yData = allData(i).North(:);
+    stack(:,:,i) = [xData(1:N), yData(1:N)];
+  end
+
+average_path = mean(stack, 3);
+
+% Plot the XY data (check it)
+figure(fig_num);
+
+for ith_lap = 1:length(allData)
+
+    lap = laps{ith_lap};
+    lap_St = fcn_Path_convertXY2St(average_path,lap);
+    lap_S = lap_St(:,1);
+
+    xData = laps{ith_lap}(:,1);
+    yData = laps{ith_lap}(:,2);
+
+    vXData = allData(ith_lap).East_Velocity;
+    vYData = allData(ith_lap).North_Velocity;
+    
+    % Plot X versus Y
+    subplot(1,3,1);
+    hold on;
+    axis equal;
+    h_position = plot(xData, yData,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('XY, lap: %.0f',ith_lap));
+    thisLapColor = get(h_position,'Color');    
+
+    % Calculate velocity-based yaw angles
+    yawAngleDegrees = atan2(vYData,vXData)*180/pi;
+
+    subplot(1,3,2);
+    hold on;
+    plot(lap_S, yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
+    
+    % Find Wn
+    fc = 0.1; % Cutoff frequency (in Hz)
+    fs = 2/(mean(diff(allData(ith_lap).Time_ms))/1000); % GPS Sampling frequency (in Hz)
+    
+    % Normalize the cutoff frequency (cutoff frequency divided by Nyquist frequency)
+    Wn = fc / (fs / 2);
+    
+    % Design the 2nd -order Butterworth filter
+    [b, a] = butter(2, Wn, 'low');
+    
+    b_normalized = b/sum(b);
+    a_normalized = a/sum(b);
+    
+    filtered_yawAngleDegrees = filtfilt(b_normalized, a_normalized, yawAngleDegrees); % filter along row dimension
+
+    subplot(1,3,3);
+    hold on;
+    plot(lap_S, filtered_yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Filtered Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
+
+end
+
+subplot(1,3,1);
+plot(average_path(:,1),average_path(:,2),'.-','MarkerSize',10,'LineWidth',2,'DisplayName','Lap Average','Color','k')
+legend('Interpreter','none','Location','best');
+xlabel('X [m]');
+ylabel('Y [m]');
+
+subplot(1,3,2);
+legend('Interpreter','none','Location','best');
+xlabel('Station');
+ylabel('Yaw [deg]');
+
+subplot(1,3,3);
+legend('Interpreter','none','Location','best');
+xlabel('Station');
+ylabel('Yaw [deg]');
+
+
 Error('Stop here - this is where we stopped');
+% 
+% Next steps:
+% ✓ Find the code that calculates the average traversal (path). This is the "reference" that will be used to measure station and transverse. This is prbably already done (Gabe). If not, do not reinvent that wheel.
+% ✓ Convert paths to ST coordinates for each lap
+% ✓ Plot yaw results of each lap with Station as the x-axis
+% - Might plot transverse error, just to show how each lap deviated from average
+% ✓ Low-pass filter the yaw angles, plot again versus station to see how well they align with each other. See lines 184 to 201 in fcn_TireRadiusEstimation_rEstVelFilteredTime
+% ✓ Repeat yaw angle calculations using velocities_east and _north (basically same calculation, except using velocity vectors rather than delta_X and delta_Y vectors)
+% ✓ Repeat plotting
+% ✓ Compare velocity-based and position-based yaw measurement. Suspect that velocity-based will be MUCH better.
+% ✓ Look at Steve Maransky's thesis on details of how to include yaw angle in calculating distance / velocity effects, with track, to calculate wheel radius.
+% (NOTE: this is VERY easy to derive - worth trying yourself)
+% ✓ Take best yaw angle measurement above and modify tire radius estimation to include yaw
+% ✓ Take photos of tires with metric ruler side-by-side to confirm the 9.X cm estimates
+% ✓ After including yaw, check if tire radius estimates converge toward the 1 percent goal of variation - probably will not, but should be MUCH better
 
-Next steps:
-- Find the code that calculates the average traversal (path). This is the "reference" that will be used to measure station and transverse. This is prbably already done (Gabe). If not, do not reinvent that wheel.
-- Convert paths to ST coordinates for each lap
-- Plot yaw results of each lap with Station as the x-axis
-- Might plot transverse error, just to show how each lap deviated from average
-- Low-pass filter the yaw angles, plot again versus station to see how well they align with each other. See lines 184 to 201 in fcn_TireRadiusEstimation_rEstVelFilteredTime
-- Repeat yaw angle calculations using velocities_east and _north (basically same calculation, except using velocity vectors rather than delta_X and delta_Y vectors)
-- Repeat plotting
-- Compare velocity-based and position-based yaw measurement. Suspect that velocity-based will be MUCH better.
-- Look at Steve Maransky's thesis on details of how to include yaw angle in calculating distance / velocity effects, with track, to calculate wheel radius.
-(NOTE: this is VERY easy to derive - worth trying yourself)
-- Take best yaw angle measurement above and modify tire radius estimation to include yaw
-- Take photos of tires with metric ruler side-by-side to confirm the 9.X cm estimates
-- After including yaw, check if tire radius estimates converge toward the 1 percent goal of variation - probably will not, but should be MUCH better
+%% FIELD DATA case: radius estimation yaw corrected using velocity that is time filtered, HSOV Reber 3 laps
 
+fig_num = 10003;
+titleString = sprintf('FIELD DATA case: radius estimation using velocity that is time filtered, HSOV Reber 3 laps');
+fprintf(1,'Figure %.0f: %s\n',fig_num, titleString);
+figure(fig_num); clf;
 
-
+% Load test data
+specific_test_cases = 7002;
+test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
 velocities_omegas = cellArrayOf_sampleData{1};
+
+% Load test data
+specific_test_cases = 7010;
+test_options = [];
+cellArrayOf_sampleData = fcn_TireRadiusEstimation_fillSampleData((specific_test_cases),(test_options),(-1));
+allData = cellArrayOf_sampleData{1};
+
+n = min(3, numel(allData));         
+cellArrayOf_yaws = cell(1, n);
+
+for ith_lap = 1:length(allData)
+
+    vXData = allData(ith_lap).East_Velocity;
+    vYData = allData(ith_lap).North_Velocity;
+    
+    % Calculate velocity-based yaw angles
+    yawAngleDegrees = unwrap(atan2(vYData,vXData));
+    cellArrayOf_yaws{ith_lap,1} = yawAngleDegrees;
+
+end
+
+yaws = cell2mat(cellArrayOf_yaws);
+
+% Find Wn
+fc = 2; % Cutoff frequency (in Hz)
+fs = 1/(mean(diff(allData(ith_lap).Time_ms))/1000); % GPS Sampling frequency (in Hz)
+
+% Normalize the cutoff frequency (cutoff frequency divided by Nyquist frequency)
+Wn = fc / (fs / 2);
+
+% Design the 2nd -order Butterworth filter
+[b, a] = butter(2, Wn, 'low');
+
+b_normalized = b/sum(b);
+a_normalized = a/sum(b);
+
+filtered_yaws = filtfilt(b_normalized, a_normalized, yaws); % filter along row dimension
+
+phi = diff(filtered_yaws)/0.05;
 
 % Set values
 plotXvalues = (1:length(velocities_omegas(:,1)))'*0.05;
 plotXlabelString = 'Time [sec]';
 
 % Call the function
-rEff = fcn_TireRadiusEstimation_rEstVelFilteredTime(velocities_omegas, (plotXvalues), (plotXlabelString), (fig_num));
+rEff = fcn_TireRadiusEstimation_rEstVelFilteredTime(velocities_omegas, phi, (plotXvalues), (plotXlabelString), (fig_num));
+axis([66.5465  103.7131    0.0101    0.1488]);
+
 
 sgtitle(titleString, 'Interpreter','none');
 
@@ -527,7 +735,6 @@ if flag_do_debug
     st = dbstack; %#ok<*UNRCH>
     fprintf(1,'STARTING function: %s, in file: %s\n',st(1).name,st(1).file);
 end
-
 
 %% check input arguments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
