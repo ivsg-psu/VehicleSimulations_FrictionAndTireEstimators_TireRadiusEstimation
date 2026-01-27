@@ -298,10 +298,10 @@ N = min(lengths);
 average_path = mean(stack, 3);
 
 % Plot the XY data (check it)
-figure(fig_num);
+
 
 for ith_lap = 1:length(allData)
-
+    figure(fig_num);
     lap = laps{ith_lap};
     lap_St = fcn_Path_convertXY2St(average_path,lap);
     lap_S = lap_St(:,1);
@@ -323,10 +323,10 @@ for ith_lap = 1:length(allData)
 
     subplot(1,3,2);
     hold on;
-    plot(lap_S(1:end-1), yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
+    plot(lap_S(1:end-1), yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',1,'DisplayName',sprintf('Yaw, lap: %.0f',ith_lap),'Color',(thisLapColor + [1 1 1])/2);
     
     % Find Wn
-    fc = 0.1; % Cutoff frequency (in Hz)
+    fc = 0.5; % Cutoff frequency (in Hz)
     fs = 2/(mean(diff(allData(ith_lap).Time_ms))/1000); % GPS Sampling frequency (in Hz)
     
     % Normalize the cutoff frequency (cutoff frequency divided by Nyquist frequency)
@@ -340,12 +340,19 @@ for ith_lap = 1:length(allData)
     
     filtered_yawAngleDegrees = filtfilt(b_normalized, a_normalized, yawAngleDegrees); % filter along row dimension
 
-    subplot(1,3,3);
+    subplot(1,3,2);
     hold on;
     plot(lap_S(1:end-1), filtered_yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Filtered Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
 
+    figure(fig_num+ith_lap);
+    clf;
+    hold on;
+    plot(lap_S(1:end-1), yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',1,'DisplayName',sprintf('Yaw, lap: %.0f',ith_lap),'Color',(thisLapColor + [1 1 1])/2);
+    plot(lap_S(1:end-1), filtered_yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Filtered Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
+    
 end
 
+figure(fig_num);
 subplot(1,3,1);
 plot(average_path(:,1),average_path(:,2),'.-','MarkerSize',10,'LineWidth',2,'DisplayName','Lap Average','Color','k')
 legend('Interpreter','none','Location','best');
@@ -401,10 +408,11 @@ N = min(lengths);
 average_path = mean(stack, 3);
 
 % Plot the XY data (check it)
-figure(fig_num);
+
+
 
 for ith_lap = 1:length(allData)
-
+    figure(fig_num);
     lap = laps{ith_lap};
     lap_St = fcn_Path_convertXY2St(average_path,lap);
     lap_S = lap_St(:,1);
@@ -430,7 +438,7 @@ for ith_lap = 1:length(allData)
     plot(lap_S, yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
     
     % Find Wn
-    fc = 0.1; % Cutoff frequency (in Hz)
+    fc = 1.5; % Cutoff frequency (in Hz)
     fs = 2/(mean(diff(allData(ith_lap).Time_ms))/1000); % GPS Sampling frequency (in Hz)
     
     % Normalize the cutoff frequency (cutoff frequency divided by Nyquist frequency)
@@ -446,6 +454,12 @@ for ith_lap = 1:length(allData)
 
     subplot(1,3,3);
     hold on;
+    plot(lap_S, filtered_yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Filtered Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
+
+    figure(fig_num+ith_lap);
+    clf;
+    hold on;
+    plot(lap_S, yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',1,'DisplayName',sprintf('Yaw, lap: %.0f',ith_lap),'Color',(thisLapColor + [1 1 1])/2);
     plot(lap_S, filtered_yawAngleDegrees,'.-','MarkerSize',10,'LineWidth',2,'DisplayName',sprintf('Filtered Yaw, lap: %.0f',ith_lap),'Color',thisLapColor);
 
 end
